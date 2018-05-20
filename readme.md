@@ -29,9 +29,9 @@
 - DispatcherServlet:前端控制器，由SpringMVC提供
 - HandlerMapping:处理器映射器，由SpringMVC提供
 - HandlerAdapter:处理器适配器，由SpringMVC提供
-- **Handler:处理器，由SpringMVC提供**
+- **Handler:处理器，需要程序员编写**
 - ViewResolver:视图解析器，由SpringMVC提供
-- **View:真正视图页面需要由程序编写**
+- **View:真正视图页面需要由程序员编写**
 ## 入门程序
 ### 需求
 - 实现商品列表查询
