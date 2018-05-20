@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:dubbo="http://code.alibabatech.com/schema/dubbo"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+		http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+        http://www.springframework.org/schema/mvc 
+        http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd
+        http://code.alibabatech.com/schema/dubbo 
+        http://code.alibabatech.com/schema/dubbo/dubbo.xsd
+        http://www.springframework.org/schema/context 
+        http://www.springframework.org/schema/context/spring-context-4.0.xsd">
+    
+    <!-- 
+    	通过映射处理器映射器找到对应的的handler，
+    	之后请求处理器适配器执行该handler
+     -->
+    
+    
+    <!-- 配置handler
+    	使用了BeanNameUrlHandlerMapping映射处理器，handler的name为浏览器访问的url
+     -->
+    <bean id="itemController1" name="/itemsList.action" class="vvr.springmvc.first.ItemController1"/>
+    
+    <bean id="itemController2" class="vvr.springmvc.first.ItemController2"/>
+    
+    <!-- 配置处理器映射器 
+    	BeanNameUrlHandlerMapping： 根据请求url（XXXX.action）匹配spring容器bean的 name
+		找到对应的bean（程序编写的Handler）
+    -->  
+    <bean class="org.springframework.web.servlet.handler.BeanNameUrlHandlerMapping"/>
+    
+    <!-- 配置另一个处理器映射器
+    	简单url映射
+    	集中配置bean的id对应的url
+     -->
+    <bean class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
+    	<!-- mappings为SimpleUrlHandlerMapping该类提供的属性 -->
+    	<property name="mappings">
+    		<props>
+    			<!-- key代表url，标签内为指定bean的id -->
+    			<prop key="/itemsTest1.action">itemController1</prop>
+    			<prop key="/itemsTest2.action">itemController2</prop>
+    		</props>
+    	</property>
+    </bean>
+    
+    
+    <!-- 配置处理器适配器 
+    	程序编写Handler根据适配器的要求编写。
+		SimpleControllerHandlerAdapter适配器要求：
+		通过supports方法知道Handler必须要实现哪个接口
+    -->
+    <bean class="org.springframework.web.servlet.mvc.SimpleControllerHandlerAdapter"/>
+    
+    
+    <!-- 配置另一个处理器适配器
+    	要求Handler实现 HttpRequestHandler接口
+     -->
+    <bean class="org.springframework.web.servlet.mvc.HttpRequestHandlerAdapter"/>
+    
+    
+    <!-- 配置视图解析器 
+    	要求将jstl包加到classpath下
+    -->
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver"/>
+    
+</beans>
