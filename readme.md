@@ -36,3 +36,207 @@
 ### 需求
 - 实现商品列表查询
 ### 需要的jar包
+使用spring4.1.3(带spring-webmvc模块)![](./_image/2018-05-21-12-55-57.jpg)
+
+
+![](./_image/2018-05-21-12-58-26.jpg)
+### 前端控制器
+在web.xml中配置  
+```xml
+<!-- 配置springMVC前台控制器，核心 -->
+  <servlet>
+  	<servlet-name>springmvc</servlet-name>
+  	<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+  	
+  	<!-- 加载springmvc配置文件 -->
+  	<init-param>
+  		<param-name>contextConfigLocation</param-name>
+  		<!-- 
+  			配置文件地址
+  			如果不配置contextConfigLocation，
+  			默认查找的配置文件名称classpath下的servlet名称+"-servlet.xml"即springmvc-servlet.xml
+  		 -->
+  		<param-value>classpath:springmvc.xml</param-value>
+  	</init-param>
+  </servlet>
+  
+  <!-- 
+  	可以配置/，此工程所有请求全部由springmvc解析，此种方式可以实现RESTful方式，需要特殊处理，对静态文件的解析不能由springmvc
+  	可以配置*.do或*.action，所有请求的url扩展名为.do或.action由springmvc解析，此种方法常用
+  	 不可以配置/*,如果配置/*，返回jsp也由springmvc解析，这是不对的
+   -->
+  <servlet-mapping>
+  	<servlet-name>springmvc</servlet-name>
+  	<url-pattern>*.action</url-pattern>
+  </servlet-mapping>
+```
+### springmvc.xml
+- 在springmvc.xml中配置springmvc架构三大组件(处理器映射器、适配器、视图解析器)
+### 处理器映射器
+- 在springmvc.xml中配置:
+    - BeanNameUrlHandlerMapping:根据请求url(xxx.action)匹配spring容器bean的name，找到对应的bean(程序编写的Handler)
+```xml
+<!-- 配置处理器映射器 
+    	BeanNameUrlHandlerMapping： 根据请求url（XXXX.action）匹配spring容器bean的 name
+		找到对应的bean（程序编写的Handler）
+    -->  
+    <bean class="org.springframework.web.servlet.handler.BeanNameUrlHandlerMapping"/>
+```
+**所有处理器映射器都实现HandlerMapping接口。**
+### 处理器适配器
+在springmvc.xml配置  
+```xml
+<!-- 配置处理器适配器 
+    	程序编写Handler根据适配器的要求编写。
+		SimpleControllerHandlerAdapter适配器要求：
+		通过supports方法知道Handler必须要实现哪个接口
+    -->
+    <bean class="org.springframework.web.servlet.mvc.SimpleControllerHandlerAdapter"/>
+```
+**所有的适配器都是实现了HandlerAdapter接口。**  
+- 程序编写Handler根据适配器的要求编写
+- SimpleControllerHandlerAdapter适配器要求:
+    - 通过supports方法知道Handler必须要实现那个接口
+```java
+@Override
+	public boolean supports(Object handler) {
+		return (handler instanceof Controller);
+	}
+```
+### Handler编写
+- 需要实现Controller接口
+```java
+public class ItemController1 implements Controller {
+
+	@Override
+	public ModelAndView handleRequest(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		
+		// 商品列表
+		List<Items> itemsList = new ArrayList<Items>();
+
+		Items items_1 = new Items();
+		items_1.setName("联想笔记本a");
+		items_1.setPrice(6000f);
+		items_1.setCreatetime(new Date());
+		items_1.setDetail("ThinkPad T430 联想笔记本电脑！");
+
+		Items items_2 = new Items();
+		items_2.setName("苹果手机");
+		items_2.setPrice(5000f);
+		items_2.setDetail("iphone5  苹果手机！");
+		
+		Items items_3 = new Items();
+		items_2.setName("苹果手机qqq");
+		items_2.setPrice(5000f);
+		items_2.setDetail("iphone5  苹果手机！");
+
+		itemsList.add(items_1);
+		itemsList.add(items_2);
+		itemsList.add(items_3);
+
+		//将数据存到request中
+		//request.setAttribute("itemsList", itemsList);
+		//可以使用ModelAndView对象，能够往request中存数据也可以实现转发
+		ModelAndView modelAndView = new ModelAndView();
+		modelAndView.addObject("itemsList", itemsList);
+		
+		//转到指定视图
+		modelAndView.setViewName("/WEB-INF/jsp/itemsList.jsp");
+		return modelAndView;
+	}
+}
+```
+### 配置Handler
+- 在springmvc.xml配置Handler由spring管理Handler。
+```xml
+<!-- 配置handler
+    	使用了BeanNameUrlHandlerMapping映射处理器，handler的name为浏览器访问的url
+     -->
+    <bean id="itemController1" name="/itemsList.action" class="vvr.springmvc.first.ItemController1"/>
+```
+### 配置视图解析器
+- 配置视图解析，能够解析jsp视图
+```xml
+<!-- 配置视图解析器 
+    	要求将jstl包加到classpath下
+    -->
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver"/>
+```
+## 其它非注解处理器映射器和适配器
+### BeanNameUrlHandlerMapping(映射器)
+- 根据请求url(xxx.action)匹配spring容器bean的name
+- 找到对应的bean(程序编写的Handler)
+### SimpleUrlHandlerMapping(映射器)
+- 集中配置bean的id对应的url
+```xml
+<!-- 配置另一个处理器映射器
+    	简单url映射
+    	集中配置bean的id对应的url
+     -->
+    <bean class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
+    	<!-- mappings为SimpleUrlHandlerMapping该类提供的属性 -->
+    	<property name="mappings">
+    		<props>
+    			<!-- key代表url，标签内为指定bean的id -->
+    			<prop key="/itemsTest1.action">itemController1</prop>
+    			<prop key="/itemsTest2.action">itemController2</prop>
+    		</props>
+    	</property>
+    </bean>
+```
+- 在springmvc.xml配置了多个处理器映射器，多个处理器映射器可以共存。
+### SimpleControllerHandlerAdapter(适配器)
+- 要求程序编写的Handler(Controller)需要实现的Controller接口。
+### HttpRequestHandlerAdapter(适配器)
+#### 开发Handler
+```java
+public class ItemController2 implements HttpRequestHandler {
+
+	@Override
+	public void handleRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		
+		// 商品列表
+		List<Items> itemsList = new ArrayList<Items>();
+
+		Items items_1 = new Items();
+		items_1.setName("联想笔记本a");
+		items_1.setPrice(6000f);
+		items_1.setCreatetime(new Date());
+		items_1.setDetail("ThinkPad T430 联想笔记本电脑！");
+
+		Items items_2 = new Items();
+		items_2.setName("苹果手机");
+		items_2.setPrice(5000f);
+		items_2.setDetail("iphone5  苹果手机！");
+		
+		itemsList.add(items_1);
+		itemsList.add(items_2);
+
+		request.setAttribute("itemsList", itemsList);
+		request.getRequestDispatcher("/WEB-INF/jsp/itemsList.jsp").forward(request, response);
+	}
+}
+```
+#### 配置Handler
+```xml
+<bean id="itemController2" class="vvr.springmvc.first.ItemController2"/>
+```
+使用简单url映射器:  
+```xml
+<!-- 配置另一个处理器映射器
+    	简单url映射
+    	集中配置bean的id对应的url
+     -->
+    <bean class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
+    	<!-- mappings为SimpleUrlHandlerMapping该类提供的属性 -->
+    	<property name="mappings">
+    		<props>
+    			<!-- key代表url，标签内为指定bean的id -->
+    			<prop key="/itemsTest1.action">itemController1</prop>
+    			<prop key="/itemsTest2.action">itemController2</prop>
+    		</props>
+    	</property>
+    </bean>
+    
+```
+
