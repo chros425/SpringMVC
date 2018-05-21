@@ -237,6 +237,5 @@ public class ItemController2 implements HttpRequestHandler {
     		</props>
     	</property>
     </bean>
-    
 ```
 
