@@ -27,11 +27,25 @@
     
     <bean id="itemController2" class="vvr.springmvc.first.ItemController2"/>
     
+    
+    <!-- 配置使用注解写的Handler
+    	如果有多个Handler，就需要配置多个
+     -->
+    <!-- <bean class="vvr.springmvc.first.ItemController3" /> -->
+    
+    <!-- 开启注解扫描，使用spring组件扫描，即可不需要配置多个Handler
+    	多个包之间用逗号隔开
+     -->
+    <context:component-scan base-package="vvr.springmvc.first"/>
+    
+    
+    
     <!-- 配置处理器映射器 
     	BeanNameUrlHandlerMapping： 根据请求url（XXXX.action）匹配spring容器bean的 name
 		找到对应的bean（程序编写的Handler）
     -->  
     <bean class="org.springframework.web.servlet.handler.BeanNameUrlHandlerMapping"/>
+    
     
     <!-- 配置另一个处理器映射器
     	简单url映射
@@ -48,6 +62,9 @@
     	</property>
     </bean>
     
+    <!-- 配置注解处理器映射器 -->
+    <bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping"/>
+    
     
     <!-- 配置处理器适配器 
     	程序编写Handler根据适配器的要求编写。
@@ -62,10 +79,22 @@
      -->
     <bean class="org.springframework.web.servlet.mvc.HttpRequestHandlerAdapter"/>
     
+    <!-- 配置注解处理器适配器
+    	该适配器必须与RequestMappingHandlerMapping处理器映射器一起使用
+     -->
+    <bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter"/>
+    
     
     <!-- 配置视图解析器 
     	要求将jstl包加到classpath下
     -->
-    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver"/>
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+    	<!-- 配置逻辑视图名的前缀和后缀 -->
+    	<!-- 前缀 -->
+    	<property name="prefix" value="/WEB-INF/jsp/"/>
+    	
+    	<!-- 后缀 -->
+    	<property name="suffix" value=".jsp"/>
+    </bean>
     
 </beans>
