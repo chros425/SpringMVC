@@ -238,4 +238,91 @@ public class ItemController2 implements HttpRequestHandler {
     	</property>
     </bean>
 ```
+## DispatcherServlet.properties
+
+![](./_image/2018-05-23-13-26-29.jpg)  
+- DispatcherServlet前端控制器加载DispatvherServlet.properties配置文件，从而默认加载各个组件。如果在springmvc.xml中配置了处理器映射器和适配器，则以springmvc.xml中配置的为准。
+## 注解映射器和适配器
+### 注解映射器
+- 在springmvc.xml中配置RequestMappingHandlerMapping映射器
+- 使用RequestMappingHandlerMapping需要在Handler中使用**@Controller**标识此类是一个控制器，使用**@RequestMapping**指定Handler方法所对应的url。
+```xml
+<!-- 配置注解处理器映射器 -->
+<bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping"/>
+```
+### 注解适配器
+- 在springmvc.xml中配置RequestMappingHandlerAdapter
+- RequestMappingHandlerAdapter不需要Handler实现任何接口，它需要和RequestMappingHandlerMapping注解映射器配对使用，主要解析Handler方法中的形参。
+```xml
+<!-- 配置注解处理器适配器
+	该适配器必须与RequestMappingHandlerMapping处理器映射器一起使用
+ -->
+<bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter"/>
+```
+### 注解开发Handler
+```java
+@Controller
+public class ItemController3 {
+	//商品列表，@RequestMapping中的url建议与方法名相同
+	//这里的url地址后可以不加.action,也可以加，但是，如果不加，在浏览器访问时需要加上
+	@RequestMapping("/itemsList123.action")
+	public ModelAndView itemsList() {
+		
+		// 商品列表
+		List<Items> itemsList = new ArrayList<Items>();
+
+		Items items_1 = new Items();
+		items_1.setName("联想笔记本a");
+		items_1.setPrice(6000f);
+		items_1.setCreatetime(new Date());
+		items_1.setDetail("ThinkPad T430 联想笔记本电脑！");
+
+		Items items_2 = new Items();
+		items_2.setName("苹果手机");
+		items_2.setPrice(5000f);
+		items_2.setDetail("iphone5  苹果手机！");
+		
+
+		itemsList.add(items_1);
+		itemsList.add(items_2);
+		
+		ModelAndView modelAndView = new ModelAndView();
+		modelAndView.addObject("itemsList", itemsList);
+		modelAndView.setViewName("/WEB-INF/jsp/itemsList.jsp");
+		
+		return modelAndView;
+	}
+}
+```
+### 配置Handler
+```xml
+<!-- 配置使用注解写的Handler
+    	如果有多个Handler，就需要配置多个
+     -->
+    <!-- <bean class="vvr.springmvc.first.ItemController3" /> -->
+    
+    <!-- 开启注解扫描，使用spring组件扫描，即可不需要配置多个Handler
+    	多个包之间用逗号隔开
+     -->
+    <context:component-scan base-package="vvr.springmvc.first"/>
+```
+### 小结
+- DispatcherServlet:前端控制器，相当于中央调度器，可以降低组件之间的耦合度
+- HandlerMapping:处理器映射器，负责根据url查找Handler
+- HandlerAdapter:处理器适配器，负责根据适配器要求的规则去执行处理器。可以通过扩展适配器支持不同类型的Handler。
+- viewResolver:视图解析器，根据逻辑视图名解析出真正的视图
+```xml
+<!-- 配置视图解析器 
+    	要求将jstl包加到classpath下
+    -->
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+    	<!-- 配置逻辑视图名的前缀和后缀 -->
+    	<!-- 前缀 -->
+    	<property name="prefix" value="/WEB-INF/jsp/"/>
+    	
+    	<!-- 后缀 -->
+    	<property name="suffix" value=".jsp"/>
+    </bean>
+```
+**真正视图地址=前缀+逻辑视图名+后缀**
 
