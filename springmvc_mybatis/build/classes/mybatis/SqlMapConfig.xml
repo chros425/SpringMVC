@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+
+	<!-- 
+		该配置文件用于配置mybatis
+		包括:别名、setting、mapper（也可不配）
+	 -->
+
+
+	<!-- 别名定义 -->
+	<typeAliases>
+		
+		<!-- 批量指定别名，
+			指定包路径，自动扫描包下边的pojo，定义别名，别名默认为类名（首字母大写或小写）
+		 -->
+		<package name="vvr.ssm.pojo"/>
+		
+	</typeAliases>
+	
+	
+	 <!-- <mappers>
+	 	<package name="vvr.mybatis.mapper"/>
+	 </mappers> -->
+	
+</configuration>

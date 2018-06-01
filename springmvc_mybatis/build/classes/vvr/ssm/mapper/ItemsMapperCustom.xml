@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="vvr.ssm.mapper.ItemsMapperCustom">
+	
+	<sql id="query_items_where">
+		<if test="itemsCustom!=null">
+			<if test="itemsCustom.name!=null and itemsCustom.name!=''">
+				and name like '%${itemsCustom.name}%'
+			</if>
+			<if test="itemsCustom.id!=null">
+				and id = #{itemsCustom.id}
+			</if>
+		</if>
+	</sql>
+	
+	<!-- 根据条件查询商品 -->
+	<select id="findItemsList" parameterType="itemsQueryVo" resultType="itemsCustom">
+		SELECT * FROM items
+		<where>
+			<include refid="query_items_where"/>
+		</where>
+	</select>
+
+</mapper>

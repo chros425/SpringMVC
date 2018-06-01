@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:dubbo="http://code.alibabatech.com/schema/dubbo"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+		http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+        http://www.springframework.org/schema/mvc 
+        http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd
+        http://code.alibabatech.com/schema/dubbo 
+        http://code.alibabatech.com/schema/dubbo/dubbo.xsd
+        http://www.springframework.org/schema/context 
+        http://www.springframework.org/schema/context/spring-context-4.0.xsd">
+    
+    
+    <!-- 
+    	该配置文件用于配置springmvc
+    	包括处理器映射器、处理器适配器、视图解析器、Handler
+     -->
+    
+    
+   
+    <!-- 开启注解扫描，使用spring组件扫描，即可不需要配置多个Handler
+    	多个包之间用逗号隔开
+     -->
+    <context:component-scan base-package="vvr.ssm.controller"/>
+    
+    <!-- 使用annotation-driven可以替代下面的映射器和处理器的配置 -->
+    <!-- <mvc:annotation-driven></mvc:annotation-driven> -->
+    
+    <!-- 配置注解处理器映射器 -->
+    <bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping"/>
+    
+    
+    <!-- 配置注解处理器适配器
+    	该适配器必须与RequestMappingHandlerMapping处理器映射器一起使用
+     -->
+    <bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter"/>
+    
+    
+    <!-- 配置视图解析器 
+    	要求将jstl包加到classpath下
+    -->
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+    	<!-- 配置逻辑视图名的前缀和后缀 -->
+    	<!-- 前缀 -->
+    	<property name="prefix" value="/WEB-INF/jsp/"/>
+    	
+    	<!-- 后缀 -->
+    	<property name="suffix" value=".jsp"/>
+    </bean>
+    
+</beans>
