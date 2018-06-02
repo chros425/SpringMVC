@@ -325,4 +325,5 @@ public class ItemController3 {
     </bean>
 ```
 **真正视图地址=前缀+逻辑视图名+后缀**
+## springmvc和mybatis整合工程搭建
 
