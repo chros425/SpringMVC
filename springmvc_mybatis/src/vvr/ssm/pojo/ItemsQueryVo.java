@@ -16,6 +16,4 @@ public class ItemsQueryVo {
 	public void setItemsCustom(ItemsCustom itemsCustom) {
 		this.itemsCustom = itemsCustom;
 	}
-	
-	
 }

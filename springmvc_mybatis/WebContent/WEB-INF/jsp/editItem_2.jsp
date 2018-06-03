@@ -16,11 +16,11 @@
 <table width="100%" border=1>
 <tr>
 	<td>商品名称</td>
-	<td><input type="text" name="name" value="${item.name }"/></td>
+	<td><input type="text" name="itemsCustom.name" value="${item.name }"/></td>
 </tr>
 <tr>
 	<td>商品价格</td>
-	<td><input type="text" name="price" value="${item.price }"/></td>
+	<td><input type="text" name="itemsCustom.price" value="${item.price }"/></td>
 </tr>
 <%-- <tr>
 	<td>商品生产日期</td>
@@ -30,7 +30,7 @@
 <tr>
 	<td>商品简介</td>
 	<td>
-	<textarea rows="3" cols="30" name="detail">${item.detail }</textarea>
+	<textarea rows="3" cols="30" name="itemsCustom.detail">${item.detail }</textarea>
 	</td>
 </tr>
 <tr>

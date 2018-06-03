@@ -50,7 +50,11 @@ public class ItemsServiceImpl implements ItemsService {
 			// 抛出异常，提示调用接口的用户
 		}
 		
-		itemsMapper.updateByPrimaryKey(itemsCustom);
+		//不能修改大文本数据
+		//itemsMapper.updateByPrimaryKey(itemsCustom);
+		
+		//可以修改大文本数据
+		itemsMapper.updateByPrimaryKeyWithBLOBs(itemsCustom);
 	}
 
 }
