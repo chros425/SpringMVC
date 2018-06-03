@@ -325,5 +325,367 @@ public class ItemController3 {
     </bean>
 ```
 **真正视图地址=前缀+逻辑视图名+后缀**
-## springmvc和mybatis整合工程搭建
+## SpringMVC和MyBatis整合工程搭建
+### 整合思路
+- 在mybatis和spring整合的基础上添加springmvc
+- spring要管理springmvc编写Handler(controller)、mybatis的SqlSessionFactory、mapper
+1. 整合dao，spring和mybatis整合
+2. 整合service，spring管理service接口，service中可以调用spring容器中dao(mapper)
+3. 整合controller，spring管理controller接口，在controller调用service
+### 工程结构
+#### 配置文件
+- applicationContext-dao.xml:配置数据源、SqlSessionFactory、mapper扫描器
+- applicationContext-service.xml:配置service接口                                                               
+- applicationContext-transaction.xml:事务管理
+- springmvc.xml:springmvc的配置，配置处理器映射器、适配器、视图解析器
+- SqlMapConfig.xml:mybatis的配置文件，配置别名、settings、mapper(也可在applicationContext中使用注解扫描来配置)
+#### applicationContext-dao.xml
+配置mybatis的数据源、sqlSessionFactory、mapper扫描器
+#### applicationContext-transaction.xml
+在此配置事务，声明事务  
+```xml
+<!-- 事务管理器 -->
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource"/>
+	</bean>
+	
+	<!-- 通知 -->
+	<tx:advice id="txAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="save*" propagation="REQUIRED"/>
+			<tx:method name="delete*" propagation="REQUIRED"/>
+			<tx:method name="insert*" propagation="REQUIRED"/>
+			<tx:method name="update*" propagation="REQUIRED"/>
+			<tx:method name="find*" propagation="SUPPORTS" read-only="true"/>
+			<tx:method name="select*" propagation="SUPPORTS" read-only="true"/>
+			<tx:method name="get*" propagation="SUPPORTS" read-only="true"/>
+		</tx:attributes>
+	</tx:advice>
+	
+	
+	<!-- AOP -->
+	<aop:config>
+		<!-- 切入点表达式，vvr.ssm.service包下的任意类的任意方法的任意参数 -->
+		<aop:advisor advice-ref="txAdvice" pointcut="execution(* vvr.ssm.service.*.*(..))"/>
+	</aop:config>
+```
+#### 前端控制器配置
+在web.xml中配置  
+```xml
+<!-- 配置springMVC前端控制器，核心 -->
+  <servlet>
+  	<servlet-name>springmvc</servlet-name>
+  	<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+  	
+  	<!-- 加载springmvc配置文件 -->
+  	<init-param>
+  		<param-name>contextConfigLocation</param-name>
+  		<param-value>classpath:spring/springmvc.xml</param-value>
+  	</init-param>
+  </servlet>
+  
+ 
+  <servlet-mapping>
+  	<servlet-name>springmvc</servlet-name>
+  	<url-pattern>*.action</url-pattern>
+  </servlet-mapping>
+```
+#### 配置springmvc.xml
+```xml
+<!-- 开启注解扫描，使用spring组件扫描，即可不需要配置多个Handler
+    	多个包之间用逗号隔开
+     -->
+    <context:component-scan base-package="vvr.ssm.controller"/>
+    
+    <!-- 使用annotation-driven可以替代下面的映射器和处理器的配置 -->
+    <!-- <mvc:annotation-driven></mvc:annotation-driven> -->
+    
+    <!-- 配置注解处理器映射器 -->
+    <bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping"/>
+    
+    
+    <!-- 配置注解处理器适配器
+    	该适配器必须与RequestMappingHandlerMapping处理器映射器一起使用
+     -->
+    <bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter"/>
+    
+    
+    <!-- 配置视图解析器 
+    	要求将jstl包加到classpath下
+    -->
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+    	<!-- 配置逻辑视图名的前缀和后缀 -->
+    	<!-- 前缀 -->
+    	<property name="prefix" value="/WEB-INF/jsp/"/>
+    	
+    	<!-- 后缀 -->
+    	<property name="suffix" value=".jsp"/>
+    </bean>
+```
+#### 配置spring
+在web.xml中配置  
+```xml
+<!-- 配置spring -->
+  <listener>
+  	<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+  </listener>
+  
+  <!-- 加载方式:默认只能加载WEB-INF目录下的配置文件，提供配置方法，加载src目录下的，写法固定 -->
+  <context-param>
+  	<param-name>contextConfigLocation</param-name>
+  	<param-value>classpath:spring/applicationContext-*.xml</param-value>
+  </context-param>
+```
+### 商品列表开发
+#### 需求
+- 查询商品列表
+#### mapper
+- 功能描述:根据条件查询商品信息，返回商品列表
+- 一般情况下针对查询mapper需要自定义mapper，首先针对单表进行逆向工程，生成代码。
+##### mapper.xml
+```xml
+<mapper namespace="vvr.ssm.mapper.ItemsMapperCustom">
+	
+	<sql id="query_items_where">
+		<if test="itemsCustom!=null">
+			<if test="itemsCustom.name!=null and itemsCustom.name!=''">
+				and name like '%${itemsCustom.name}%'
+			</if>
+			<if test="itemsCustom.id!=null">
+				and id = #{itemsCustom.id}
+			</if>
+		</if>
+	</sql>
+	
+	<!-- 根据条件查询商品 -->
+	<select id="findItemsList" parameterType="itemsQueryVo" resultType="itemsCustom">
+		SELECT * FROM items
+		<where>
+			<include refid="query_items_where"/>
+		</where>
+	</select>
+</mapper>
+```
+#### 包装类
+```java
+public class ItemsQueryVo {
+
+	private ItemsCustom itemsCustom;
+
+	public ItemsCustom getItemsCustom() {
+		return itemsCustom;
+	}
+
+	public void setItemsCustom(ItemsCustom itemsCustom) {
+		this.itemsCustom = itemsCustom;
+	}
+}
+```
+#### mapper.java
+```java
+//查询商品
+	public List<ItemsCustom> findItemsList(ItemsQueryVo itemsQueryVo) throws Exception;
+```
+#### service
+```java
+public class ItemsServiceImpl implements ItemsService {
+
+	//需要注入dao，使用注解注入，还需要在spring配置文件中配置service
+	//因为dao是通过扫描mapper代理生成，所有没有在配置文件中定义相应的bean
+	//所以配置service时，没法使用property注入，所以采用注解注入
+	@Autowired
+	private ItemsMapperCustom itemsMapperCustom;
+
+	@Override
+	public List<ItemsCustom> findItemsList(ItemsQueryVo itemsQueryVo) throws Exception {
+		
+		return itemsMapperCustom.findItemsList(itemsQueryVo);
+	}
+```
+#### 在applicationContext-service.xml中配置service
+```xml
+ <!-- 商品管理的service -->
+	<bean id="itemsService" class="vvr.ssm.service.impl.ItemsServiceImpl" />
+```
+#### controller
+```java
+@Controller
+public class ItemsController {
+	
+	//注入service，同样使用注解
+	@Autowired
+	private ItemsService itemsService;
+
+	@RequestMapping("/queryItems.action")
+	public ModelAndView queryItems() throws Exception {
+		
+		ModelAndView modelAndView = new ModelAndView();
+		
+		List<ItemsCustom> itemsList = itemsService.findItemsList(null);
+		modelAndView.addObject("itemsList", itemsList);
+		
+	modelAndView.setViewName("itemsList");
+		
+		return modelAndView;
+	}
+}
+```
+## 注解开发基础
+### 商品修改
+#### 需求
+- 功能描述:商品信息修改
+- 操作流程
+    - 在商品列表页面点击修改链接
+    - 打开商品修改页面，显示当前商品信息，根据商品id查询商品信息
+    - 修改商品信息，点击提交，更新商品信息
+#### mapper
+- 使用逆向工程生成代码:
+    - 根据商品id查询商品信息
+    - 更新商品信息
+#### service
+```java
+@Override
+	public ItemsCustom findItemById(Integer id) throws Exception {
+		
+		//根据id查询出商品信息
+		Items item = itemsMapper.selectByPrimaryKey(id);
+		
+		//由于返回的是扩展类，而且随着需求的变更，如果想要获得商品的其他信息，就会需要使用扩展类
+		ItemsCustom itemsCustom = new ItemsCustom();
+		//将items的属性拷贝到itemCustomer中
+		BeanUtils.copyProperties(item, itemsCustom);
+		
+		return itemsCustom;
+	}
+
+	@Override
+	public void updateItem(Integer id, ItemsCustom itemsCustom) throws Exception {
+
+		//对于关键数据的非空校验
+		if(id == null) {
+			// 抛出异常，提示调用接口的用户
+		}
+		
+		//不能修改大文本数据
+		//itemsMapper.updateByPrimaryKey(itemsCustom);
+		
+		//可以修改大文本数据
+itemsMapper.updateByPrimaryKeyWithBLOBs(itemsCustom);
+	}
+```
+## @RequestMapping注解
+### 设置方法对应的url(完成url映射)
+- 一个方法对应一个url
+```java
+@RequestMapping("/queryItems.action")
+	public ModelAndView queryItems() throws Exception {
+```
+### 窄化请求映射
+- 在class上定义根路径
+```java
+/定义url的根路径，访问时使用根路径+方法的url
+@RequestMapping("/items")
+public class ItemsController {
+```
+- 好处:更新规范系统的url，避免url冲突。
+### 限制http请求的方法
+- 通过requestMapping限制url请求的http方法
+- 如果限制请求必须是post，那么，如果是get请求就会抛出异常
+![](./_image/2018-06-03-18-08-03.jpg)
+```java
+@RequestMapping(value = "/editItem",method = {RequestMethod.GET,RequestMethod.POST})
+```
+## controller方法返回值
+### 返回ModelAndView
+```java
+@RequestMapping("/queryItems.action")
+	public ModelAndView queryItems() throws Exception {
+		
+		ModelAndView modelAndView = new ModelAndView();
+		
+		List<ItemsCustom> itemsList = itemsService.findItemsList(null);
+		modelAndView.addObject("itemsList", itemsList);
+		
+		modelAndView.setViewName("itemsList");
+		
+		return modelAndView;
+	}
+```
+### 返回字符串
+如果controller方法返回jsp页面，可以简单将方法返回值类型定义为字符串，最终返回逻辑视图名。  
+```java
+/**
+	 * 
+	 * @param model作用是将数据填充到request域，显示到界面
+	 * @param id对应商品的id，需要与界面中指定的参数名相同才能完成参数绑定，如果不同，就使用@requestParam注解
+	 * @return
+	 * @throws Exception
+	 * 方法返回字符串，字符串就是指定的逻辑视图名，返回的指定jsp页面
+	 */
+	@RequestMapping(value = "/editItem",method = {RequestMethod.GET,RequestMethod.POST})
+	public String editItem(Model model,Integer id) throws Exception{
+		
+		
+		ItemsCustom itemsCustom = itemsService.findItemById(id);
+		
+		model.addAttribute("item", itemsCustom);
+		
+		//return "editItem_2";
+		return "editItem";
+	}
+```
+### 返回void
+```java
+@RequestMapping(value = "/editItem",method = {RequestMethod.GET,RequestMethod.POST})
+	public void editItem(HttpServletRequest request,HttpServletResponse response
+			
+			,@RequestParam(value="id",required=true,defaultValue="1")Integer id) throws Exception{
+		
+		ItemsCustom itemsCustom = itemsService.findItemById(id);
+		
+		request.setAttribute("item", itemsCustom);
+		
+		request.getRequestDispatcher("/WEB-INF/jsp/editItem.jsp").forward(request, response);
+	}
+```
+- 使用此方法，容易输出json、xml格式的数据:
+    - 通过response指定响应结果
+### redirect重定向
+- 如果方法重定向到另一个url，方法返回值为`redirect:url路径`
+- 使用redirect进行重定向，request数据无法共享，url地址栏会发生变化。
+### forward转发
+- 如果forward进行请求转发，request数据就可以共享，url地址栏不会变化。
+- 方法返回值为:`forward:url路径`
+## 参数绑定
+### 参数绑定过程
+![](./_image/2018-06-03-18-24-40.jpg)
+### 默认支持的参数类型
+处理器形参中添加如下类型的参数，处理适配器会默认识别并进行赋值。  
+#### HttpServletRequest
+- 通过request对象获取请求信息
+#### HttpServletResponse
+- 通过response处理响应信息
+#### HttpSession
+- 通过session对象得到session中存放的对象
+#### Model
+- 通过model向页面传递数据
+### @RequestParam注解
+- 如果request请求的参数名和controller方法的形参名称一致，适配器自动进行参数绑定。如果不一致可以通过@RequestParam指定request请求的参数名绑定到哪个方法形参上。
+- 对于必须要传的参数，通过@RequestParam中属性required设置为true，如果不传参数则报错。
+- 对于有些参数如果不传入，还需要设置默认值，使用@RequestParam中属性defaultValue设置默认值。
+### 可以绑定简单类型
+可以绑定整型、字符型、单精度/双精度、日期、布尔型
+### 可以绑定简单pojo类型
+- 简单pojo类型只包括简单类型的属性。
+- 绑定过程
+    - request请求的参数名称和pojo的属性名一致，就可以绑定成功。
+### 可以绑定包装的pojo
+- 包装的pojo里包括了pojo
+- 页面参数定义:
+```jsp
+<td>商品名称</td>
+	<td><input type="text" name="itemsCustom.name" value="${item.name }"/></td>
+```
+- 注意name属性的值
+- 包装类型的属性也是itemsCustom
 
