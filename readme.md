@@ -793,4 +793,31 @@ public class CustomerDateConverter implements Converter<String, Date> {
 		</property>
 	</bean>
 ```
-
+## 问题处理
+### post乱码
+- 在web.xml中加入
+```xml
+<!-- 解决post乱码 -->
+  <filter>
+	<filter-name>CharacterEncodingFilter</filter-name>
+	<filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+	<init-param>
+	<param-name>encoding</param-name>
+	<param-value>utf-8</param-value>
+	</init-param>
+  </filter>
+  <filter-mapping>
+	<filter-name>CharacterEncodingFilter</filter-name>
+	<url-pattern>/*</url-pattern>
+  </filter-mapping>
+```
+以上可以解决post请求乱码问题。  
+- 对于get请求中文参数出现乱码解决方法有两个:
+    - 修改Tomcat配置文件添加编码与工程编码一致
+    - `<Connector URIEncoding="utf-8" connectionTimeout="20000" port="8080" protocol="HTTP/1.1" redirectPort="8443"/>`
+    - 另外一种方法对参数进行重新编码:
+```java
+String userName new;
+String(request.getParamter("userName").getBytes("ISO8859-1"),"utf-8");
+```
+- ISO8859-1是Tomcat默认编码，需要将Tomcat编码后的内容按UTF-8编码。
