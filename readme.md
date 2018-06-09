@@ -692,9 +692,9 @@ public class ItemsController {
 - SpringMVC没有提供默认的对日期类型的绑定，需要自定义日期类型的绑定。
 #### 使用WebDataBinder(了解)
 在controller类中定义:  
-![](./_image/2018-06-09-17-36-54.jpg)
+![](./_image/2018-06-09-17-36-54.jpg)  
 使用这种方法问题是无法在多个controller共用。  
-### 使用WebBindingInitializer(了解)
+#### 使用WebBindingInitializer(了解)
 - 使用WebBindingInitializer让多个controller共用属性编辑器。
 - 自定义WebBindingInitializer，注入到处理器适配器中。
 - 如果想多个controller需要共同注册相同的属性编辑器，可以实现PropertyEditorRegistrar接口，并注入webBindingInitializer中。
