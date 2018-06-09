@@ -37,7 +37,27 @@
     <!-- 配置注解处理器适配器
     	该适配器必须与RequestMappingHandlerMapping处理器映射器一起使用
      -->
-    <bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter"/>
+    <bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter">
+    	<!-- 在注解适配器中注入Converter转换器 -->
+    	<property name="webBindingInitializer" ref="customerBinder"/>
+    </bean>
+    
+    <!-- 自定义webBinder -->
+    <bean id="customerBinder" class="org.springframework.web.bind.support.ConfigurableWebBindingInitializer">
+    	<!-- 注入转换器 -->
+    	<property name="conversionService" ref="conversionService"/>
+    </bean>
+    
+    <!-- conversionService -->
+    <bean id="conversionService" class="org.springframework.format.support.FormattingConversionServiceFactoryBean">
+    	<property name="converters">
+    		<list>
+    			<!-- list集合代表可以注入多个自定义的转换器，converter是springMVC后期常用的 -->
+    			<bean class="vvr.ssm.controller.converter.CustomerDateConverter"/>
+    			<bean class="vvr.ssm.controller.converter.StringTrimConverter"/>
+    		</list>
+    	</property>
+    </bean>
     
     
     <!-- 配置视图解析器 

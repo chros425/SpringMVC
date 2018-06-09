@@ -114,7 +114,7 @@ public class ItemsController {
 			,ItemsQueryVo itemsQueryVo) throws Exception {
 		
 		//执行修改
-		//itemsService.updateItem(id, itemsCustom);
+		itemsService.updateItem(id, itemsCustom);
 		//itemsService.updateItem(id, itemsQueryVo.getItemsCustom());
 		
 		//重定向，以为是在同一个根路径下，所以可以不用加根路径
