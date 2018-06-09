@@ -688,4 +688,109 @@ public class ItemsController {
 ```
 - 注意name属性的值
 - 包装类型的属性也是itemsCustom
+### 自定义绑定使用属性编辑器
+- SpringMVC没有提供默认的对日期类型的绑定，需要自定义日期类型的绑定。
+#### 使用WebDataBinder(了解)
+在controller类中定义:  
+![](./_image/2018-06-09-17-36-54.jpg)
+使用这种方法问题是无法在多个controller共用。  
+### 使用WebBindingInitializer(了解)
+- 使用WebBindingInitializer让多个controller共用属性编辑器。
+- 自定义WebBindingInitializer，注入到处理器适配器中。
+- 如果想多个controller需要共同注册相同的属性编辑器，可以实现PropertyEditorRegistrar接口，并注入webBindingInitializer中。
+- 编写CustomPropertyEditor:
+![](./_image/2018-06-09-17-41-55.jpg)
+- 配置如下
+```xml
+<!-- 注册属性编辑器，程序员自己编写的属性编辑器 -->
+	<bean id="customPropertyEditor" class="cn.itcast.ssm.propertyeditor.CustomPropertyEditor"></bean> 
+
+<!-- 自定义webBinder，spring提供，程序员需要注入 -->
+	<bean id="customBinder"
+		class="org.springframework.web.bind.support.ConfigurableWebBindingInitializer">
+		<property name="propertyEditorRegistrars">
+			<list>
+				<ref bean="customPropertyEditor"/>
+			</list>
+		</property>
+	</bean>
+
+<!--注解适配器 -->
+	<bean
+		class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter">
+		 <property name="webBindingInitializer" ref="customBinder"></property> 
+	</bean>
+```
+### 自定义参数绑定使用转换器
+#### 自定义Converter
+- 自定义日期类型转换器，需要实现Converter<S，T>
+    - 这里的泛型，S代表原始值得类型
+    - T代表想要转换的接口
+    - 实现convert()方法
+```java
+/**
+ * 字符串转日期类型
+ * springmvc本身没有对日期类型参数做处理，需要程序员自己解决，指定时间显示格式
+ * @author wwr
+ *
+ */
+public class CustomerDateConverter implements Converter<String, Date> {
+
+	@Override
+	public Date convert(String source) {
+		
+		try {
+			//将指定字符串转成日期格式，还需要在配置文件中配置该类
+			return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(source);
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+}
+```
+#### 配置方式1
+- 针对配置文件中不使用<mvc:annotation-driven>
+```xml
+<!-- 配置注解处理器适配器
+    	该适配器必须与RequestMappingHandlerMapping处理器映射器一起使用
+     -->
+    <bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter">
+    	<!-- 在注解适配器中注入Converter转换器 -->
+    	<property name="webBindingInitializer" ref="customerBinder"/>
+    </bean>
+    
+    <!-- 自定义webBinder -->
+    <bean id="customerBinder" class="org.springframework.web.bind.support.ConfigurableWebBindingInitializer">
+    	<!-- 注入转换器 -->
+    	<property name="conversionService" ref="conversionService"/>
+    </bean>
+    
+    <!-- conversionService -->
+    <bean id="conversionService" class="org.springframework.format.support.FormattingConversionServiceFactoryBean">
+    	<property name="converters">
+    		<list>
+    			<!-- list集合代表可以注入多个自定义的转换器，converter是springMVC后期常用的 -->
+    			<bean class="vvr.ssm.controller.converter.CustomerDateConverter"/>
+    			<bean class="vvr.ssm.controller.converter.StringTrimConverter"/>
+    		</list>
+    	</property>
+    </bean>
+```
+#### 配置方式2
+- 针对使用<mvc:annotation-driven>的配置
+```xml
+<mvc:annotation-driven conversion-service="conversionService">
+</mvc:annotation-driven>
+<!-- conversionService -->
+	<bean id="conversionService"
+		class="org.springframework.format.support.FormattingConversionServiceFactoryBean">
+		<!-- 转换器 -->
+		<property name="converters">
+			<list>
+				<bean class="vvr.ssm.controller.converter.CustomerDateConverter"/>
+			</list>
+		</property>
+	</bean>
+```
 
