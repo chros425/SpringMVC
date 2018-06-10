@@ -11,9 +11,19 @@
 <body> 
 <form action="${pageContext.request.contextPath }/items/queryItem.action" method="post">
 查询条件：
+
 <table width="100%" border=1>
 <tr>
-<td><input type="submit" value="查询"/></td>
+<td>
+	<input type="submit" value="查询"/>
+	类别：
+	<select>
+		<c:forEach items="${itemsType}" var="itemType">
+			<option value="itemType.key">${itemType.value}</option>
+		</c:forEach>
+	</select>
+</td>
+
 </tr>
 </table>
 商品列表：
