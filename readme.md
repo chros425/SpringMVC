@@ -1,7 +1,4 @@
 # SpringMVC
-
-[TOC]
-
 ## SpringMVC框架
 
 - SpringMVC是Spring的一个模块，提供web层解决方案(基于mvc设计架构)
@@ -827,43 +824,108 @@ String(request.getParamter("userName").getBytes("ISO8859-1"),"utf-8");
 ```
 - ISO8859-1是Tomcat默认编码，需要将Tomcat编码后的内容按UTF-8编码。
 
-## 测试软件
-- 啦啦啦
+## 数据回显
+
+### 需求
+
+表单提交出现错误，重新回到表单，用户重新填写数据，刚才提交的参数在页面上回显。
+
+### 对简单类型的数据回显
+
+对商品修改数据回显：
+
+注意在进入修改页面的controller方法中和提交修改商品信息方法`model.addAttribute()`方法设置的key一致。
+
+修改商品显示方法：
+
+![1528608666544](C:\Users\wwr\AppData\Local\Temp\1528608666544.png)
+
+修改商品页面：
+
+![1528608684461](C:\Users\wwr\AppData\Local\Temp\1528608684461.png)
+
+修改商品提交方法：
+
+![1528608720673](C:\Users\wwr\AppData\Local\Temp\1528608720673.png)
+
+注意这里的key，也就是id，必须一致。
+
+### pojo类型数据回显
+
+#### 方法1
+
+使用`model.addAttribute()`方法进行数据回显。
+
+![1528608888031](C:\Users\wwr\AppData\Local\Temp\1528608888031.png)
+
+#### 方法2
+
+使用@ModelAttribute，作用将请求pojo数据放到Model中回显到页面。
+
+在ModelAttribute方法指定的名称就是要填充Model中的key，在页面中就要通过key取数据。
+
 ```java
-HelloHorld
+/**
+	 * 商品修改提交，使用返回字符串的方式，重定向或转发的方式返回action
+	 * @param id商品的id
+	 * @param itemCustom商品类，里面包含商品的简单数据类型，springmvc会找到该类中相同名称的属性
+	 * @param itemsQueryVo包装数据类型，包含多个pojo类型，对应的，前台jsp表单的name属性需要加上对应的属性，例如itemsCustom.name
+	 * @param @ModelAttribute(value="item") 中value指定的是key，该注解相当于model.addAttribute("item", itemsCustom);
+	 * 		  存到request域中。可以完成数据回显的操作
+	 * @return
+	 * @throws Exception 
+	 */
+	@RequestMapping(value = "/editItemSubmit",method = {RequestMethod.GET,RequestMethod.POST})
+	public String editItemSubmit(Integer id,@ModelAttribute(value="item") ItemsCustom itemsCustom
+			,ItemsQueryVo itemsQueryVo) throws Exception {
+		
+		//执行修改
+		itemsService.updateItem(id, itemsCustom);
+		//itemsService.updateItem(id, itemsQueryVo.getItemsCustom());
+		
+		//重定向，以为是在同一个根路径下，所以可以不用加根路径
+		//return "redirect:queryItems.action";
+		
+		//跳回到修改界面，查看数据回显
+		return "editItem";
+		
+		//转发
+		//return "forward:queryItems.action";
+	}
 ```
-**加粗**  
-***斜体*** 
 
-**粗体**
+### @ModelAttribute将方法返回值传到页面
 
-### 三级标题
+- 需求：商品类别信息在商品信息页面显示。
 
 ```java
-System.out.println("牛逼")
+/**
+	 * 使用@ModelAttribute将公用的数据的方法返回值传到页面，不用在每一个controller方法通过Model将数据传到页面。
+	 * 不需要写url映射
+	 * 在前台界面中用到了itemsType时就会显示出数据
+	 * 商品类别属于不变的，公用的数据，所以提取出来，可以在多个页面中（多个url或方法中使用）
+	 * @return
+	 * @throws Exception
+	 */
+	@ModelAttribute("itemsType")
+	public Map<String,String> getItemsType() throws Exception{
+		
+		HashMap itemsType = new HashMap<String,String>();
+		itemsType.put("101", "数码");
+		itemsType.put("102","日用品");
+		
+		return itemsType;
+	}
 ```
 
-- 找到了一个不错的软件
+- 页面
 
-试试写一个段落，哈哈哈。  
-新的一行
-
-- 啦啦啦
-
-这回是一个段落了吧。
-
-又一个新行。
-
-```java
-public static void main(String[] args){
-    
-}
+```jsp
+类别：
+	<select>
+		<c:forEach items="${itemsType}" var="itemType">
+			<option value="itemType.key">${itemType.value}</option>
+		</c:forEach>
+	</select>
 ```
-- 哈哈哈
-- 啦啦啦
-- 段落之间为什么会空这么多格
-
-## 二级标题
-
-- 来来来
 
