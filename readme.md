@@ -838,15 +838,15 @@ String(request.getParamter("userName").getBytes("ISO8859-1"),"utf-8");
 
 修改商品显示方法：
 
-![1528608666544](C:\Users\wwr\AppData\Local\Temp\1528608666544.png)
+![1528609618900](E:\github上项目\SpringMVC\_image\1528609618900.png)
 
 修改商品页面：
 
-![1528608684461](C:\Users\wwr\AppData\Local\Temp\1528608684461.png)
+![1528609597443](E:\github上项目\SpringMVC\_image\1528609597443.png)
 
 修改商品提交方法：
 
-![1528608720673](C:\Users\wwr\AppData\Local\Temp\1528608720673.png)
+![1528609575453](E:\github上项目\SpringMVC\_image\1528609575453.png)
 
 注意这里的key，也就是id，必须一致。
 
@@ -856,7 +856,7 @@ String(request.getParamter("userName").getBytes("ISO8859-1"),"utf-8");
 
 使用`model.addAttribute()`方法进行数据回显。
 
-![1528608888031](C:\Users\wwr\AppData\Local\Temp\1528608888031.png)
+![1528609542854](E:\github上项目\SpringMVC\_image\1528609542854.png)
 
 #### 方法2
 
