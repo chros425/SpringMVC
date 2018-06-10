@@ -929,3 +929,5 @@ String(request.getParamter("userName").getBytes("ISO8859-1"),"utf-8");
 	</select>
 ```
 
+## 参数绑定集合类型
+
