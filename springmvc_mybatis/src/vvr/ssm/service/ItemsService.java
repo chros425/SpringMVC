@@ -26,4 +26,12 @@ public interface ItemsService {
 	 * @throws Exception
 	 */
 	public void updateItem(Integer id,ItemsCustom itemsCustom) throws Exception;
+	
+	
+	/**
+	 * 批量删除商品信息
+	 * @param id
+	 * @throws Exception
+	 */
+	public void deleteItem(Integer[] id) throws Exception;
 }

@@ -157,4 +157,15 @@ public class ItemsController {
 		//转发
 		//return "forward:queryItems.action";
 	}
+	
+	
+	@RequestMapping("/deleteItem.action")
+	public String deleteItem(Integer[] delete_id) throws Exception{
+		
+		//service层调用删除
+		itemsService.deleteItem(delete_id);
+		return "editItem";
+		
+	}
+	
 }

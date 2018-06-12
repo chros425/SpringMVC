@@ -21,5 +21,18 @@
 			<include refid="query_items_where"/>
 		</where>
 	</select>
+	
+	<!-- 批量删除商品
+		items   : 表名
+	    id : 字段名
+	    collection:表示类型,这里参数是数组,就写成array,如果是集合,就写成list
+	    item  : 是一个变量名,自己随便起名
+	 -->
+	<delete id="batchDeleteById" parameterType="int">
+		delete from items where id in
+		<foreach item="id" collection="array" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+	</delete>
 
 </mapper>
