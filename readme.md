@@ -1207,3 +1207,135 @@ function deleteItem() {
   - `long getSize`获取文件的字节大小，单位byte。
   - `boolean isEmpty()`是否为空。
   - `void transferTo(File dest)`保存到一个目标文件中。该目标文件已经指定好文件路径，即写入本地磁盘。
+
+## json数据交互
+
+### 需求
+
+json数据格式常用于远程接口传输，http传输json数据，方便页面进行提交/请求结构解析，对json数据的解析。
+
+### SpringMVC解析json加入json解析包
+
+**注意，Spring4和Spring3使用的json包有区别**
+
+- Spring4
+  - 默认使用MappingJackson2HttpMessageConverter对json数据进行转换，需要加入Jackson包如下
+
+![1528799800933](./_image/1528799800933.png)
+
+- Spring3
+  - 默认使用MappingJacksonHttpMessageConverter 对json数据进行转换，需要加入Jackson包如下
+
+![1528799879660](./_image/1528799879660.png)
+
+### 在处理器适配器中注入MappingJackson2HttpMessageConverter
+
+让处理器适配器支持json数据解析，需要注入MappingJackson2HttpMessageConverter
+
+```xml
+<bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter">
+    	<!-- 在注解适配器中注入Converter转换器 -->
+    	<property name="webBindingInitializer" ref="customerBinder"/>
+    	<!-- json解析器 -->
+    	<property name="messageConverters">
+    		<list>
+    			<bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter"></bean>
+    		</list>
+    	</property>
+    </bean>
+```
+
+### @RequestBody和@ResponseBody
+
+- @RequestBody：将请求的json数据转成java对象。
+- @ResponseBody：将java对象转成json数据输出。
+
+![1528800210410](./_image/1528800210410.png)
+
+### 请求json响应json
+
+#### controller方法
+
+```java
+/**
+	 * 请求json，响应json，请求商品信息json数据，响应商品信息json数据
+	 * @param itemsCustom
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping("/requestJson.action")
+	public @ResponseBody ItemsCustom requestJson(@RequestBody ItemsCustom itemsCustom) throws Exception{
+		
+		
+		return itemsCustom;
+	}
+```
+
+#### 页面
+
+```js
+//请求json响应json
+	function requestJson() {
+		
+		//不能使用$.post来实现了
+		/* var url = "${pageContext.request.contextPath }/requestJson.action";
+		var param = {"name" : "手机","price" : "30000"};
+		
+		$.post(url,param,function(data){
+			alert(data);
+		});	 */	
+		
+		//请求json，必须使用$.ajax，因为需要设置contentType="application/json;charset=UTF-8"
+		$.ajax({
+			url:"${pageContext.request.contextPath }/requestJson.action",
+			type:"post",
+			contentType:"application/json;charset=UTF-8",
+			//注意，这里data的json格式，必须是里面双引号，否则400请求失败
+			//参数名也必须是data，否则请求失败
+			data:'{"name":"手机","price":"9000"}',
+			success:function(data){
+				alert(data);
+			}
+		});
+	}
+```
+
+### 请求key/value响应json
+
+#### controller方法
+
+```java
+/**
+	 * 请求key/value，响应json
+	 * @param itemsCustom
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping("/responseJson.action")
+	public @ResponseBody ItemsCustom responseJson(ItemsCustom itemsCustom) throws Exception{
+		
+		
+		return itemsCustom;
+	}
+```
+
+#### 页面
+
+```js
+//请求key/value响应json
+	function responseJson() {
+		
+		var url = "${pageContext.request.contextPath }/responseJson.action";
+		var param = "name=手机&price=7000"
+		
+		$.post(url,param,function(data){
+			alert(data.name);
+		});		
+	}
+```
+
+- 请求key/value时，可以使用$.post来完成，使用默认的contentType就可以。
+
+### 小结
+
+如果前端处理没有特殊要求，建议使用第二种，即请求key/value响应json方式，方便客户端解析请求结果。
