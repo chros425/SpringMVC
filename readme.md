@@ -931,3 +931,149 @@ String(request.getParamter("userName").getBytes("ISO8859-1"),"utf-8");
 
 ## 参数绑定集合类型
 
+### 绑定数组
+
+#### 需求
+
+- 在商品查询列表页面，用户选择要删除的商品，可以批量删除
+- 在controller方法中如何将批量提交的数据绑定成数组类型。
+
+#### 页面定义
+
+```jsp
+<td>
+	<input type="button" value="批量删除" onclick="deleteItem()">
+</td>
+</tr>
+</table>
+商品列表：
+<table width="100%" border=1>
+<tr>
+	<td>选择</td>
+	<td>商品名称</td>
+	<td>商品价格</td>
+	<td>生产日期</td>
+	<td>商品描述</td>
+	<td>操作</td>
+</tr>
+<c:forEach items="${itemsList }" var="item">
+	<tr>
+		<td><input type="checkbox" name="delete_id" value="${item.id }" /></td>
+		<td>${item.name }</td>
+		<td>${item.price }</td>
+		<td><fmt:formatDate value="${item.createtime}" pattern="yyyy-MM-dd HH:mm:ss"/></td>
+		<td>${item.detail }</td>
+		
+		<td><a href="${pageContext.request.contextPath }/items/editItem.action?id=${item.id}">修改</a></td>
+	
+	</tr>
+</c:forEach>
+
+```
+
+```js
+function deleteItem() {
+		document.itemForm.action = "${pageContext.request.contextPath }/items/deleteItem.action";
+		document.itemForm.submit();
+	}
+```
+
+#### controller方法定义
+
+```java
+@RequestMapping("/deleteItem.action")
+//注意该参数，是一个数组，依然需要与前台的name相同
+	public String deleteItem(Integer[] delete_id) throws Exception{
+		
+		//service层调用删
+       itemsService.deleteItem(delete_id);
+		return "editItem";
+		
+	}
+```
+
+#### service层
+
+```java
+@Override
+	public void deleteItem(Integer[] id) throws Exception {
+		
+		if(id == null) {
+			//抛出异常
+		}
+		
+		itemsMapperCustom.batchDeleteById(id);
+	}
+```
+
+#### mapper
+
+##### mapper.xml
+
+```xml
+<!-- 批量删除商品
+		items   : 表名
+	    id : 字段名
+	    collection:表示类型,这里参数是数组,就写成array,如果是集合,就写成list
+	    item  : 是一个变量名,自己随便起名
+	 -->
+	<delete id="batchDeleteById" parameterType="int">
+		delete from items where id in
+		<foreach item="id" collection="array" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+	</delete>
+```
+
+##### mapper.java
+
+```java
+/**
+	 * 批量删除商品
+	 * @param id
+	 * @throws Exception
+	 */
+	public void batchDeleteById(Integer[] id) throws Exception;
+```
+
+主要注意，mapper.xml中批量删除的写法，和controller中的传参。
+
+### 绑定List<Object>
+
+- 需求：批量修改商品信息提交。
+- 先进入批量修改商品页面，填写信息，点击提交。
+
+#### 页面定义
+
+![1528776923945](./_image/1528776923945.png)
+
+- 注释
+  - itemList:controller方法形参包装类型中list的属性名。
+  - itemList[0]或itemList[1]....，中[]中是序号，从0开始。
+  - itemList[].name:name就是controller方法形参包装类型中list中pojo的属性名。
+- 效果
+
+![1528777103189](./_image/1528777103189.png)
+
+#### controller方法定义
+
+- 使用包装类型接收页面批量提交的数据，绑定List。
+
+![1528777201124](./_image/1528777201124.png)
+
+- controller方法定义
+
+![1528777241906](./_image/1528777241906.png)
+
+- 效果
+
+![1528777273452](./_image/1528777273452.png)
+
+## SpringMVC和Struts的区别
+
+- SpringMVC是**通过方法形参接收参数**，在使用时可以以单例方式使用，建议使用单例。
+- Struts是**通过成员变量接收参数**，在使用时必须以多例方式使用。
+- SpringMVC是基于方法开发，Struts基于类开发。
+- SpringMVC将一个请求的Method和Handler进行关联绑定，一个method对应一个handler。
+- SpringMVC开发以方法为单位进行开发，方法更贴近service（业务方法）。
+- Struts标签解析速度比较慢，建议使用jstl。
