@@ -1,8 +1,10 @@
 package vvr.ssm.controller;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
 import vvr.ssm.pojo.ItemsCustom;
@@ -137,22 +140,49 @@ public class ItemsController {
 	 * @param itemsQueryVo包装数据类型，包含多个pojo类型，对应的，前台jsp表单的name属性需要加上对应的属性，例如itemsCustom.name
 	 * @param @ModelAttribute(value="item") 中value指定的是key，该注解相当于model.addAttribute("item", itemsCustom);
 	 * 		  存到request域中。可以完成数据回显的操作
+	 * @param MultipartFile pictureFileMultipartFile是spring的一个接口，
+	 * 			通常我们可以在controller定义方法使用MultipartFile接收form表单提交的文件，然后将MultipartFile可以转化成一个文件
 	 * @return
 	 * @throws Exception 
 	 */
 	@RequestMapping(value = "/editItemSubmit",method = {RequestMethod.GET,RequestMethod.POST})
 	public String editItemSubmit(Integer id,@ModelAttribute(value="item") ItemsCustom itemsCustom
-			,ItemsQueryVo itemsQueryVo) throws Exception {
+			,ItemsQueryVo itemsQueryVo,MultipartFile pictureFile) throws Exception {
+		
+		
+		//文件上传
+		if(pictureFile != null) {
+			
+			//文件上传的路径
+			String filePath = "D:\\develop\\image\\springmvc\\";
+			
+			//获取文件原始名称
+			String OldFileName = pictureFile.getOriginalFilename();
+			
+			//设置新的文件名称
+			String newFileName = UUID.randomUUID().toString() + OldFileName.substring(OldFileName.lastIndexOf("."));
+			
+			//新文件
+			File file = new File(filePath + newFileName);
+			
+			//将文件写入磁盘，transferTo() 方法保存到一个目标文件中。即指定的磁盘路径
+			pictureFile.transferTo(file);
+			
+			//设置商品图片的名称至数据库
+			itemsCustom.setPic(newFileName);
+		}
+		
+		
 		
 		//执行修改
 		itemsService.updateItem(id, itemsCustom);
 		//itemsService.updateItem(id, itemsQueryVo.getItemsCustom());
 		
 		//重定向，以为是在同一个根路径下，所以可以不用加根路径
-		//return "redirect:queryItems.action";
+		return "redirect:queryItems.action";
 		
 		//跳回到修改界面，查看数据回显
-		return "editItem";
+		//return "editItem";
 		
 		//转发
 		//return "forward:queryItems.action";
