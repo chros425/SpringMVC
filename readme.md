@@ -1077,3 +1077,133 @@ function deleteItem() {
 - SpringMVC将一个请求的Method和Handler进行关联绑定，一个method对应一个handler。
 - SpringMVC开发以方法为单位进行开发，方法更贴近service（业务方法）。
 - Struts标签解析速度比较慢，建议使用jstl。
+
+## 商品图片上传
+
+### 需求
+
+- 在商品修改页面，增加图片上传功能。
+- 操作流程
+  - 用户进入商品修改页面
+  - 上传图片
+  - 点击提交（提交的是图片和商品信息）
+  - 再次进入修改页面，图片在商品修改页面显示
+
+### 图片存储问题
+
+- 不要把图片上传到工程目录，不方便进行工程维护
+- 实际电商项目中使用专门图片服务器（http，比如Apache、Tomcat）
+- 本次使用图片虚拟目录，通过虚拟目录访问硬盘上存储的图片目录
+- 虚拟目录设置
+
+![1528785366040](./_image/1528785366040.png)
+
+- 图片目录中尽量进行分级目录存储，提高访问速度（提高i/o）
+
+### 配置图片上传解析器
+
+- SpringMVC用的是MultipartFile来进行文件上传，所以首先要配置MultipartResolver用于处理表单中的file。
+
+```xml
+<!-- 文件上传,配置文件上传解析器 -->
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+    	<!-- 设置上传文件的最大尺寸为5MB -->
+    	<property name="maxUploadSize">
+    		<value>5242880</value>
+    	</property>
+    	
+    	<!-- 请求的编码格式，默认为ISO8859-1 -->
+    	<property name="defaultEncoding">
+    		<value>UTF-8</value>
+    	</property>
+    	
+    	<!-- 指定上传文件的临时目录
+    	<property name="uploadTempDir">
+    		<value></value>
+    	</property>
+ 		-->
+    </bean>
+```
+
+- 属性讲解
+  - maxUploadSize，文件上传大小，单位为字节
+  - defaultEncoding，请求的编码格式，默认为ISO8859-1
+  - uploadTempDir，上传文件的临时路径
+
+#### 用到的jar包
+
+- 加入commos-fileupload的jar包
+
+![1528786151284](./_image/1528786151284.png)
+
+### 上传图片的页面
+
+```jsp
+<td>商品图片</td>
+	<td>
+		<c:if test="${item.pic != null}">
+			<img src="/pic/${item.pic}" width=100 height=100/>
+			<br/>
+		</c:if>
+		<input type="file"  name="pictureFile"/> 
+	</td>
+```
+
+- 在form标签中还需要加上`enctype="multipart/form-data" `表示该表单要处理文件。
+
+### 编写controller方法
+
+```java
+@RequestMapping(value = "/editItemSubmit",method = {RequestMethod.GET,RequestMethod.POST})
+	public String editItemSubmit(Integer id,@ModelAttribute(value="item") ItemsCustom itemsCustom
+			,ItemsQueryVo itemsQueryVo,MultipartFile pictureFile) throws Exception {
+		
+		
+		//文件上传
+		if(pictureFile != null) {
+			
+			//文件上传的路径
+			String filePath = "D:\\develop\\image\\springmvc\\";
+			
+			//获取文件原始名称
+			String OldFileName = pictureFile.getOriginalFilename();
+			
+			//设置新的文件名称
+			String newFileName = UUID.randomUUID().toString() + OldFileName.substring(OldFileName.lastIndexOf("."));
+			
+			//新文件
+			File file = new File(filePath + newFileName);
+			
+			//将文件写入磁盘，transferTo() 方法保存到一个目标文件中。即指定的磁盘路径
+			pictureFile.transferTo(file);
+			
+			//设置商品图片的名称至数据库
+			itemsCustom.setPic(newFileName);
+		}
+		
+		
+		
+		//执行修改
+		itemsService.updateItem(id, itemsCustom);
+		//itemsService.updateItem(id, itemsQueryVo.getItemsCustom());
+		
+		//重定向，以为是在同一个根路径下，所以可以不用加根路径
+		return "redirect:queryItems.action";
+		
+		//跳回到修改界面，查看数据回显
+		//return "editItem";
+		
+		//转发
+		//return "forward:queryItems.action";
+	}
+```
+
+- MultipartFile pictureFileMultipartFile是spring的一个接口，通常我们可以在controller定义方法使用MultipartFile接收form表单提交的文件，然后将MultipartFile可以转化成一个文件。
+- MultipartFile类常用的一些方法
+  - `String getContentType()`获取文件MIME类型。
+  - `InputStream getInputStream()`获取文件流。
+  - `String getName()`获取表单中文件组件的名字。
+  - `String getOriginalFilename`获取上传文件的原名。
+  - `long getSize`获取文件的字节大小，单位byte。
+  - `boolean isEmpty()`是否为空。
+  - `void transferTo(File dest)`保存到一个目标文件中。该目标文件已经指定好文件路径，即写入本地磁盘。
