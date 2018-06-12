@@ -149,7 +149,6 @@ public class ItemsController {
 	public String editItemSubmit(Integer id,@ModelAttribute(value="item") ItemsCustom itemsCustom
 			,ItemsQueryVo itemsQueryVo,MultipartFile pictureFile) throws Exception {
 		
-		
 		//文件上传
 		if(pictureFile != null) {
 			

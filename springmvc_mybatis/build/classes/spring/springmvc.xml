@@ -40,6 +40,12 @@
     <bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter">
     	<!-- 在注解适配器中注入Converter转换器 -->
     	<property name="webBindingInitializer" ref="customerBinder"/>
+    	<!-- json解析器 -->
+    	<property name="messageConverters">
+    		<list>
+    			<bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter"></bean>
+    		</list>
+    	</property>
     </bean>
     
     <!-- 自定义webBinder -->
