@@ -12,6 +12,9 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.ObjectError;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -146,11 +149,26 @@ public class ItemsController {
 	 * @throws Exception 
 	 */
 	@RequestMapping(value = "/editItemSubmit",method = {RequestMethod.GET,RequestMethod.POST})
-	public String editItemSubmit(Integer id,@ModelAttribute(value="item") ItemsCustom itemsCustom
-			,ItemsQueryVo itemsQueryVo,MultipartFile pictureFile) throws Exception {
+	public String editItemSubmit(Model model,Integer id,@Validated @ModelAttribute(value="item") ItemsCustom itemsCustom
+			,BindingResult bindingResult,ItemsQueryVo itemsQueryVo,MultipartFile pictureFile) throws Exception {
 		
-		//文件上传
-		if(pictureFile != null) {
+		//输出校验错误信息
+		//如果绑定参数时有错
+		if(bindingResult.hasErrors()) {
+			
+			//获取所有错误
+			List<ObjectError> errors = bindingResult.getAllErrors();
+			//准备在页面中输出错误信息，使用jstl
+			model.addAttribute("errors", errors);
+			
+			//如果出现错误，就返回修改界面
+			return "editItem";
+		}
+		
+		
+		//文件上传,如果文件不为空，并且原始文件名不为空，并且原始文件名长度大于0.
+		//保证了，在已经有图片的情况下，不会再上传报异常的情况
+		if(pictureFile != null && pictureFile.getOriginalFilename() != null && pictureFile.getOriginalFilename().length() > 0) {
 			
 			//文件上传的路径
 			String filePath = "D:\\develop\\image\\springmvc\\";

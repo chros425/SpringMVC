@@ -40,6 +40,7 @@
     <bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter">
     	<!-- 在注解适配器中注入Converter转换器 -->
     	<property name="webBindingInitializer" ref="customerBinder"/>
+    	
     	<!-- json解析器 -->
     	<property name="messageConverters">
     		<list>
@@ -52,6 +53,8 @@
     <bean id="customerBinder" class="org.springframework.web.bind.support.ConfigurableWebBindingInitializer">
     	<!-- 注入转换器 -->
     	<property name="conversionService" ref="conversionService"/>
+    	<!-- 配置validation校验 ,validator是ConfigurableWebBindingInitializer的属性-->
+    	<property name="validator" ref="validator"/>
     </bean>
     
     <!-- conversionService -->
@@ -63,6 +66,29 @@
     			<bean class="vvr.ssm.controller.converter.StringTrimConverter"/>
     		</list>
     	</property>
+    </bean>
+    
+    <bean id="validator" class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean">
+    	<!-- 指定提供validation的类，这里由hibernate提供 -->
+    	<property name="providerClass" value="org.hibernate.validator.HibernateValidator"/>
+    	<!-- 指定校验使用的资源文件，如果不指定，则默认使用classpath下的 ValidationMessages.properties-->
+    	<property name="validationMessageSource" ref="messageSource"/>
+    </bean>
+    
+    <!-- 校验错误文件配置 -->
+    <bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+    	<!-- 资源文件名 -->
+    	<property name="basenames">
+    		<list>
+    			<value>
+    				classpath:CustomValidationMessages
+    			</value>
+    		</list>
+    	</property>
+    	<!-- 资源文件编码格式 -->
+    	<property name="fileEncodings" value="utf-8"/>
+    	<!-- 对资源文件内容缓存时间，单位毫秒 -->
+    	<property name="cacheSeconds" value="120"/>
     </bean>
     
     

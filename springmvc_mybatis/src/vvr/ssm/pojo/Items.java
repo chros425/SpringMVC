@@ -2,15 +2,21 @@ package vvr.ssm.pojo;
 
 import java.util.Date;
 
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
 public class Items {
     private Integer id;
 
+    //错误信息指定到对应字段
+    @Size(min=1,max=30,message="{items.name.length.error}")
     private String name;
 
     private Float price;
 
     private String pic;
 
+    @NotNull(message="{items.createtime.is.notnull}")
     private Date createtime;
 
     private String detail;
