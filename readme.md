@@ -1413,3 +1413,144 @@ public class Items {
 
 ![1529055769140](./_image/1529055769140.png)
 
+## 统一异常处理
+
+### 需求
+
+- 一般项目中都需要做异常处理，基于系统架构的设计考虑，使用统一的异常处理方法。
+- 体系中异常类型
+  - 包括预期可能发生的异常，运行时异常（RuntimeException），运行时异常不是预期会发生的。
+  - 针对预期可能发生的异常，在代码手动处理异常可以try/catch捕获，可以向上抛出
+  - 针对运行时异常，只能通过规范代码质量、在系统测试时详细测试等排除运行时异常。
+
+### 统一异常处理解决方案
+
+#### 定义异常
+
+针对预期可能发生的异常，定义很多异常类型，这些异常类型通常继承于Exception。这里定义一个系统自定义异常类，用于测试。
+
+```java
+/**
+ * 自定义异常类，异常类型通常继承于Exception。实际开发中可能需要定义许多自定义异常类
+ * 该类的作用就是让程序员对于已知的错误，抛到这个类中，再由异常处理器去解决显示。
+ * 对于未知的，比如运行时异常，通过异常处理器来转成该异常类，接收到异常信息，显示到界面中给用户看。
+ * @author wwr
+ *
+ */
+public class CustomException extends Exception {
+
+	//异常信息
+	private String message;
+	
+	public CustomException(String message) {
+		
+		super(message);
+		this.message = message;
+	}
+
+	public String getMessage() {
+		return message;
+	}
+
+	public void setMessage(String message) {
+		this.message = message;
+	}
+}
+```
+
+#### 异常处理
+
+- 在统一异常处理的类中处理系统抛出的所有异常，根据异常类型来处理。
+- 前端控制器DispatcherServlet在进行HandlerMapping、调用HandlerAdapter执行Handle进行异常处理。
+
+![1529226324464](./_image/1529226324464.png)
+
+- 在系统中自定义统一的异常处理器，写系统自己的异常处理代码。
+
+##### 定义统一异常处理器类
+
+- 统一异常处理器类需要实现HandlerExceptionResolver接口。
+- 系统自定义的异常类是CustomException异常，在controller方法中、service方法中**手动**抛出此类异常。
+- 针对系统自定义的CustomException异常，可以直接从异常类中获取异常信息，将异常处理的信息在错误页面显示。
+- 针对非CustomException异常，重新构造成一个CustomException，异常信息显示为“未知错误”，此类错误需要在系统测试阶段去排除。（运行时异常）
+
+```java
+/**
+ * 自定义统一异常处理器
+ * 该异常处理器在系统中只能出现一个，和异常类不一样
+ * 该异常处理器类还需要在配置文件中定义
+ * @author wwr
+ *
+ */
+public class CustomExceptionResolver implements HandlerExceptionResolver {
+
+	@Override
+	/**
+	 * 前端控制器DispatcherServlet在进行HandlerMapping、调用HandlerAdapter执行Handler过程中，如果遇到异常，
+	 * 就会执行该方法。
+	 * handler最终要执行的handler，真是身份是HandlerMethod
+	 * ex接收到的异常信息
+	 */
+	public ModelAndView resolveException(HttpServletRequest request, HttpServletResponse response, Object handler,
+			Exception ex) {
+		
+		//打印出异常
+		ex.printStackTrace();
+		
+		//统一异常处理代码
+		
+		//异常信息
+		String messgae = null;
+		
+		CustomException customException = null;
+		
+		//针对系统自定义的CustomException异常，可以直接从该异常类中获取异常信息，并展示在错误页面
+		//如果ex是系统自定义异常，直接获取异常信息,即程序员手动抛出的
+		if(ex instanceof CustomException) {
+			customException = (CustomException) ex;
+		}else {
+			//针对非CustomException异常（比如运行时异常），则重新构造一个CustomException，错误信息为“未知错误”
+			customException = new CustomException("未知错误！");
+		}
+		//获取错误信息
+		messgae = customException.getMessage();
+		
+		//异常信息存至request域中
+		request.setAttribute("messgae", messgae);
+		
+		try {
+			//跳转至错误页面
+			request.getRequestDispatcher("/WEB-INF/jsp/error.jsp").forward(request, response);
+		} catch (ServletException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
+
+}
+```
+
+##### 配置
+
+- 只需要在springmvc.xml中配置自定义的异常处理类就可以
+
+```xml
+<!-- 定义统一异常处理器 -->
+    <bean class="vvr.ssm.exception.CustomExceptionResolver"/>
+```
+
+##### 测试抛出异常由统一异常处理器捕获
+
+可以在controller方法、service方法、dao实现类中抛出异常，要求dao、service、controller遇到的异常**全部向上抛出异常**，方法向上抛出异常`throws Exception`
+
+![1529227240974](./_image/1529227240974.png)
+
+图解
+
+![1529227296506](./_image/1529227296506.png)
+
