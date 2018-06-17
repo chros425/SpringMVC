@@ -123,4 +123,7 @@
     	</property> -->
     </bean>
     
+    <!-- 定义统一异常处理器 -->
+    <bean class="vvr.ssm.exception.CustomExceptionResolver"/>
+    
 </beans>

@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import vvr.ssm.exception.CustomException;
 import vvr.ssm.mapper.ItemsMapper;
 import vvr.ssm.mapper.ItemsMapperCustom;
 import vvr.ssm.pojo.Items;
@@ -33,6 +34,13 @@ public class ItemsServiceImpl implements ItemsService {
 		
 		//根据id查询出商品信息
 		Items item = itemsMapper.selectByPrimaryKey(id);
+		
+		//如果查询出的商品不存在
+		if(item == null) {
+			//抛出自定义异常
+			throw new CustomException("商品不存在！！！");
+		}
+		
 		
 		//由于返回的是扩展类，而且随着需求的变更，如果想要获得商品的其他信息，就会需要使用扩展类
 		ItemsCustom itemsCustom = new ItemsCustom();

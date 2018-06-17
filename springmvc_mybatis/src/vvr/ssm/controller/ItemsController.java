@@ -108,6 +108,8 @@ public class ItemsController {
 	@RequestMapping(value = "/editItem",method = {RequestMethod.GET,RequestMethod.POST})
 	public String editItem(Model model,Integer id) throws Exception{
 		
+		//定义一个系统运行时异常，为了模拟非CustomException异常
+		//int d = 1/0;
 		
 		ItemsCustom itemsCustom = itemsService.findItemById(id);
 		
