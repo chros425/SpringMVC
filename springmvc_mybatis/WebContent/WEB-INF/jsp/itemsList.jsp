@@ -34,6 +34,7 @@
 </td>
 </tr>
 </table>
+当前登录用户${username}<a href="${pageContext.request.contextPath }/loginOut.action">退出</a><br/>
 商品列表：
 <table width="100%" border=1>
 <tr>
@@ -43,6 +44,7 @@
 	<td>生产日期</td>
 	<td>商品描述</td>
 	<td>操作</td>
+	<td>rest操作</td>
 </tr>
 <c:forEach items="${itemsList }" var="item">
 	<tr>
@@ -53,6 +55,7 @@
 		<td>${item.detail }</td>
 		
 		<td><a href="${pageContext.request.contextPath }/items/editItem.action?id=${item.id}">修改</a></td>
+		<td><a href="${pageContext.request.contextPath }/items/viewItems/${item.id}">查看商品</a></td>
 	
 	</tr>
 </c:forEach>

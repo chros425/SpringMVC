@@ -30,6 +30,29 @@
     <!-- 使用annotation-driven可以替代下面的映射器和处理器的配置 -->
     <!-- <mvc:annotation-driven></mvc:annotation-driven> -->
     
+    
+    <!-- 静态资源配置 -->
+    <mvc:resources location="/js/" mapping="/js/**"/>
+    <mvc:resources location="/image/" mapping="/image/**"/>
+    
+    
+    <!-- 全局拦截器配置 -->
+    <mvc:interceptors>
+    	<mvc:interceptor>
+    		<!-- / 后两个*代表/后任意，再带一个/都行 -->
+    		<mvc:mapping path="/**"/>
+    		<bean class="vvr.ssm.interceptor.LoginInteceptor"></bean>
+    	</mvc:interceptor>
+    	
+    	<!-- 
+    	可以配置多个拦截器
+    	<mvc:interceptor>
+    		<mvc:mapping path=""/>
+    		<bean></bean>
+    	</mvc:interceptor> -->
+    </mvc:interceptors>
+    
+    
     <!-- 配置注解处理器映射器 -->
     <bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping"/>
     

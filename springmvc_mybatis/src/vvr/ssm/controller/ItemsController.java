@@ -16,9 +16,11 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -117,6 +119,26 @@ public class ItemsController {
 		
 		//return "editItem_2";
 		return "editItem";
+	}
+	
+	
+	/**
+	 * 根据商品id查看商品信息，通过rest接口
+	 * RequestMapping中指定的restful方式的url参数，参数需要用{}包起来。
+	 * 如果有多个参数，则@RequestMapping("/viewItems/{id}/{name}")
+	 * public ItemsCustom viewItems(@PathVariable Integer id,@PathVariable Integer name)
+	 * @param id
+	 * @return
+	 * @throws Exception
+	 * 
+	 * 返回的是json字符串
+	 */
+	@RequestMapping("/viewItems/{id}")
+	public @ResponseBody ItemsCustom viewItems(@PathVariable Integer id) throws Exception{
+		
+		ItemsCustom itemsCustom = itemsService.findItemById(id);
+		
+		return itemsCustom;
 	}
 	
 	/**

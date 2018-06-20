@@ -32,6 +32,28 @@
   </servlet-mapping>
   
   
+  
+  <!-- restful配置，配置映射 -->
+  <servlet>
+  	<servlet-name>springmvc_rest</servlet-name>
+  	<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+  	
+  	<!-- 加载springmvc配置文件 -->
+  	<init-param>
+  		<param-name>contextConfigLocation</param-name>
+  		<param-value>classpath:spring/springmvc.xml</param-value>
+  	</init-param>
+  </servlet>
+  
+ 
+  <servlet-mapping>
+  	<servlet-name>springmvc_rest</servlet-name>
+  	<!-- 这里配置 / 就可以了，不要配置/*,/*会在访问action后转发到jsp界面时报错，
+  		因为这样jsp也会走前端控制器，报找不到handler错误 -->
+  	<url-pattern>/</url-pattern>
+  </servlet-mapping>
+  
+  
   <!-- 解决post乱码 -->
   <filter>
 	<filter-name>CharacterEncodingFilter</filter-name>
