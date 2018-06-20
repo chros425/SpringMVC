@@ -1554,3 +1554,214 @@ public class CustomExceptionResolver implements HandlerExceptionResolver {
 
 ![1529227296506](./_image/1529227296506.png)
 
+## SpringMVC拦截器
+
+### 拦截器的应用场合
+
+- 用户请求到DispatcherServlet中，DispatcherServlet调用HandlerMapping查找handler，HandlerMapping返回一个拦截的链儿（多个拦截器），SpringMVC中的拦截器是通过HandlerMapping发起的。
+
+### SpringMVC拦截器方法
+
+![1529470941725](./_image/1529470941725.png)
+
+### 测试拦截器
+
+#### 定义两个拦截器
+
+![1529471055886](./_image/1529471055886.png)
+
+#### 配置拦截器
+
+配置全局的拦截器（也可以在HandlerMapping中单独配置，但是这样如果有多个HandlerMapping就需要在每个HandlerMapping中都配置），DispatcherServlet将配置的全局拦截器加载到所有的HandlerMapping。
+
+在springmvc.xml中配置：
+
+![1529471234968](./_image/1529471234968.png)
+
+#### 测试1（1号和2号都放行）
+
+测试结果：
+
+> HandlerInterceptor1...preHandle
+>
+> HandlerInterceptor2...preHandle
+>
+> 
+>
+> HandlerInterceptor2...postHandle
+>
+> HandlerInterceptor1...postHandle
+>
+>  
+>
+> HandlerInterceptor2...afterCompletion
+>
+> HandlerInterceptor1...afterCompletion
+
+总结：执行preHandle**是顺序执行**。执行postHandle、afterCompletion是**倒叙执行**。
+
+#### 测试2（1号放行，2号不放行）
+
+测试结果：
+
+> HandlerInterceptor1...preHandle
+>
+> HandlerInterceptor2...preHandle
+>
+> HandlerInterceptor1...afterCompletion
+
+总结：如果preHandle不放行，postHandle、afterCompletion都不执行。只要有一个拦截器不放行，controller不能执行完成。
+
+#### 测试3（1号和2号不放行）
+
+测试结果：
+
+> HandlerInterceptor1...preHandle
+
+总结：只有前边的拦截器preHandle方法放行，下边的拦截器的preHandle才执行。
+
+#### 日志拦截器或异常拦截器要求
+
+将日志拦截器或异常拦截器放在拦截器链儿中第一份位置，且preHandle方法放行。
+
+### 拦截器应用（用户认证拦截）
+
+#### 需求
+
+用户访问系统的资源（url），如果用户没有进行身份认证，进行拦截，系统跳转登录界面，如果用户已经认证通过，用户可以继续访问系统的资源。
+
+#### 用户登录及退出功能开发
+
+```java
+@Controller
+public class LoginController {
+
+	/**
+	 * 登录
+	 * @param session
+	 * @param username
+	 * @param password
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping("/login")
+	public String login(HttpSession session,String username,String password) throws Exception{
+		
+		//调用service层对用户进行验证，数据库中是否存在
+		//....
+		
+		session.setAttribute("username", username);
+		
+		//重定向到商品查询页面
+		return "redirect:/items/queryItems.action";
+	}
+	
+	@RequestMapping("/loginOut")
+	public String loginOut(HttpSession session) throws Exception{
+		
+		//销毁session
+		session.invalidate();
+		
+		//重定向到商品查询页面
+		return "redirect:/items/queryItems.action";
+	}
+}
+```
+
+#### 用户身份认证校验拦截器
+
+拦截实现思路：
+
+![1529472452164](./_image/1529472452164.png)
+
+#### 拦截器
+
+```java
+/**
+ * 拦截器使用的AOP
+ * @author wwr
+ *
+ */
+public class LoginInteceptor implements HandlerInterceptor {
+
+	@Override
+	/**
+	 * 在执行handler后执行该方法
+	 * 做系统统一异常处理
+	 * 进行方法性能监控
+	 * 实现系统统一日志
+	 */
+	public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex)
+			throws Exception {
+		
+	}
+
+	@Override
+	/**
+	 * 在执行preHandle时，返回modelandview之前执行
+	 * 如果需要向页面提供一些公用的数据或配置一些视图信息，使用此方法实现modelAndView
+	 */
+	public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView)
+			throws Exception {
+		
+	}
+
+	@Override
+	/**
+	 * 在执行handler之前执行
+	 * 用于用户校验验证
+	 */
+	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+		
+		//得到url请求
+		String url = request.getRequestURI();
+		
+		//判断地址是否公开
+		//判断url中包含login.action的位置
+		if(url.indexOf("login.action") >= 0) {
+			
+			//如果是公开地址，放行
+			return true;
+		}
+		
+		HttpSession session = request.getSession();
+		//获取session中的用户名
+		String username = (String) session.getAttribute("username");
+		
+		//如果用户名存在，放行
+		if(username != null) {
+			return true;
+		}
+		
+		//执行到这里进行拦截，跳转到用户登录界面，进行身份验证
+		request.getRequestDispatcher("/WEB-INF/jsp/login.jsp").forward(request, response);
+		
+		
+		//返回false不放行，返回true时放行
+		return false;
+	}
+
+}
+
+```
+
+springmvc.xml中配置
+
+```xml
+<!-- 全局拦截器配置 -->
+    <mvc:interceptors>
+    	<mvc:interceptor>
+    		<!-- / 后两个*代表/后任意，再带一个/都行 -->
+    		<mvc:mapping path="/**"/>
+    		<bean class="vvr.ssm.interceptor.LoginInteceptor"></bean>
+    	</mvc:interceptor>
+    	
+    	<!-- 
+    	可以配置多个拦截器
+    	<mvc:interceptor>
+    		<mvc:mapping path=""/>
+    		<bean></bean>
+    	</mvc:interceptor> -->
+    </mvc:interceptors>
+```
+
