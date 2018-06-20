@@ -1413,6 +1413,101 @@ public class Items {
 
 ![1529055769140](./_image/1529055769140.png)
 
+## RESTful支持
+
+### 什么是RESTful
+
+RESTful软件开发理念，RESTful对http进行非常好的诠释。
+
+RESTful即Representational State Transfer 。
+
+> 综合上面的解释，我们总结一下什么是RESTful架构：
+>
+> 　　（1）每一个URI代表一种资源；
+>
+> 　　（2）客户端和服务器之间，传递这种资源的某种表现层；
+>
+> 　　（3）客户端通过四个HTTP动词，对服务器端资源进行操作，实现"表现层状态转化"。
+
+### url的RESTful实现
+
+非RESTful的http的url：http://localhost:8080/items/editItems.action?id=1
+
+RESTful的url是简洁的：http://localhost:8080/items/editItems/1 
+
+参数通过url传递，rest接口**返回json数据**。
+
+#### 需求
+
+根据id查看商品信息，商品信息查看的连接使用RESTful方式实现，商品信息以json返回。
+
+#### 更改DispatcherServlet配置
+
+```xml
+  <!-- restful配置，配置映射 -->
+  <servlet>
+  	<servlet-name>springmvc_rest</servlet-name>
+  	<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+  	
+  	<!-- 加载springmvc配置文件 -->
+  	<init-param>
+  		<param-name>contextConfigLocation</param-name>
+  		<param-value>classpath:spring/springmvc.xml</param-value>
+  	</init-param>
+  </servlet>
+  
+ 
+  <servlet-mapping>
+  	<servlet-name>springmvc_rest</servlet-name>
+  	<!-- 这里配置 / 就可以了，不要配置/*,/*会在访问action后转发到jsp界面时报错，
+  		因为这样jsp也会走前端控制器，报找不到handler错误 -->
+  	<url-pattern>/</url-pattern>
+  </servlet-mapping>
+```
+
+这里主要是看映射的配置，看`<url-pattern>`标签。
+
+#### 参数通过url传递
+
+```java
+/**
+	 * 根据商品id查看商品信息，通过rest接口
+	 * RequestMapping中指定的restful方式的url参数，参数需要用{}包起来。
+	 * 如果有多个参数，则@RequestMapping("/viewItems/{id}/{name}")
+	 * public ItemsCustom viewItems(@PathVariable Integer id,@PathVariable Integer name)
+	 * @param id
+	 * @return
+	 * @throws Exception
+	 * 
+	 * 返回的是json字符串
+	 */
+	@RequestMapping("/viewItems/{id}")
+	public @ResponseBody ItemsCustom viewItems(@PathVariable Integer id) throws Exception{
+		
+		ItemsCustom itemsCustom = itemsService.findItemById(id);
+		
+		return itemsCustom;
+	}
+```
+
+注意这里的返回值一定要加上@RequestBody注解，返回json数据，否则报错。
+
+#### 设置静态资源解析
+
+当DispatcherServlet拦截 / 开头的所有请求，对静态资源的访问就报错。
+
+![1529474123989](./_image/1529474123989.png)
+
+需要通过设置对静态资源进行解析：
+
+```xml
+    <!-- 静态资源配置 -->
+    <mvc:resources location="/js/" mapping="/js/**"/>
+    <mvc:resources location="/image/" mapping="/image/**"/>
+```
+
+访问/js/**的url工程下的/js/下解析。
+
 ## 统一异常处理
 
 ### 需求
